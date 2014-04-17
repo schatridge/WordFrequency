@@ -3,7 +3,7 @@ import java.util.*;
 import java.io.*;
 
 public class FrequencyAnalyst {
-	private Map<String, Integer> wordCatalog = new HashMap<String, Integer>();
+	private Map<String, Integer> wordCatalog = new TreeMap<String, Integer>();
 	
 	public FrequencyAnalyst(String filepath) {
 		readDocument(filepath);
@@ -26,6 +26,14 @@ public class FrequencyAnalyst {
 			
 			while (scan.hasNext()) {
 				String word = scan.next();
+				
+				word = word.toLowerCase();
+				word = word.replaceAll("[^a-zA-Z]", "");
+				word = word.replaceAll("\\s","");
+				word = word.replaceAll(" ", "");
+				
+				//System.out.println(word);
+				//if (word.equals("academy")) System.out.println("Test");
 				
 				if (wordCatalog.containsKey(word)) {
 					int value = wordCatalog.get(word) + 1;
@@ -52,11 +60,14 @@ public class FrequencyAnalyst {
 			numWords++;
 		}
 		
-		return numWords / total;
+		return total / numWords;
 	}
 	
 	public int frequency(String word) {
-		return wordCatalog.get(word);
+		if (contains(word))
+			return wordCatalog.get(word);
+		else
+			return 0;
 	}
 	
 	public boolean contains(String word) {
@@ -111,5 +122,25 @@ public class FrequencyAnalyst {
 		double omega = Math.sqrt(sum / counter);
 		
 		return (float) omega;
+	}
+	
+	public boolean writeToFile(String directory, String fname) {
+		try {
+			PrintWriter writer = new PrintWriter(directory + "/" + fname);
+			Set<String> words = wordCatalog.keySet();
+			
+			for (String word : words) {
+				writer.println(word + "\t" + wordCatalog.get(word));
+			}
+			
+			writer.close();
+			return true;
+		}
+		catch (FileNotFoundException fnfe) {
+			return false;
+		}
+		catch (SecurityException se) {
+			return false;
+		}
 	}
 }
