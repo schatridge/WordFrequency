@@ -29,11 +29,7 @@ public class FrequencyAnalyst {
 				
 				word = word.toLowerCase();
 				word = word.replaceAll("[^a-zA-Z]", "");
-				word = word.replaceAll("\\s","");
-				word = word.replaceAll(" ", "");
-				
-				//System.out.println(word);
-				//if (word.equals("academy")) System.out.println("Test");
+				word = word.trim();
 				
 				if (wordCatalog.containsKey(word)) {
 					int value = wordCatalog.get(word) + 1;
@@ -130,7 +126,9 @@ public class FrequencyAnalyst {
 			Set<String> words = wordCatalog.keySet();
 			
 			for (String word : words) {
-				writer.println(word + "\t" + wordCatalog.get(word));
+				if (word.trim().length() > 0) {
+					writer.println(String.format("%-" + 40 + "s", word) + "\t" + wordCatalog.get(word));
+				}
 			}
 			
 			writer.close();
