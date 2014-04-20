@@ -22,7 +22,7 @@ public class Main {
 				
 					analyzer.writeToFile(args[1], fname);
 					
-					FrequencyAnalyst.mergeMaps(composite, analyzer);
+					FrequencyAnalyst.merge(composite, analyzer);
 		        	}
 			}
 			

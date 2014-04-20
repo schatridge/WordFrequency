@@ -215,22 +215,18 @@ public class FrequencyAnalyst {
 	else throw new RuntimeException("No valid data to analyze.");
 	}
 	
-	public static void mergeMaps(Map<String, Integer> recipient, Map<String, Integer> merger) {
-		Set<String> mergerSet = merger.keySet();
+	public static void merge(FrequencyAnalyst recipient, FrequencyAnalyst merger) {
+		Set<String> mergerSet = merger.wordCatalog.keySet();
 		
 		for (String word : mergerSet) {
-			if (recipient.containsKey(word)) {
-				int value = recipient.get(word) + merger.get(word);
-				recipient.put(word, value);
+			if (recipient.wordCatalog.containsKey(word)) {
+				int value = recipient.frequency(word) + merger.frequency(word);
+				recipient.wordCatalog.put(word, value);
 			}
 			else {
-				recipient.put(word, merger.get(word));
+				recipient.wordCatalog.put(word, merger.frequency(word));
 			}
 		}
-	}
-	
-	public static void mergeMaps(FrequencyAnalyst recipient, FrequencyAnalyst merger) {
-		mergeMaps(recipient.wordCatalog, merger.wordCatalog);
 		
 		if (!recipient.activeData && merger.activeData) {
 			recipient.activeData = true;
