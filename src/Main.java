@@ -1,4 +1,6 @@
 import java.io.File;
+import java.util.Map;
+import java.util.TreeMap;
 
 
 public class Main {
@@ -6,6 +8,7 @@ public class Main {
 	public static void main(String[] args) {
 		String filepath = args[0];
 		FrequencyAnalyst analyzer = new FrequencyAnalyst();
+		FrequencyAnalyst composite = new FrequencyAnalyst();
 		
 		File dir = new File(filepath);
 		File[] directoryListing = dir.listFiles();
@@ -18,12 +21,12 @@ public class Main {
 					String fname = child.getName().replaceAll(".txt", ".json");
 				
 					analyzer.writeToFile(args[1], fname);
+					
+					FrequencyAnalyst.mergeMaps(composite, analyzer);
 		        	}
 			}
 			
-			analyzer.clear();
-			analyzer.readAllDocuments(args[0]);
-			analyzer.writeToFile(args[1], "allTexts.json");
+			composite.writeToFile(args[1], "allTexts.json");
 		}
 		else
 			System.out.println("Failure");

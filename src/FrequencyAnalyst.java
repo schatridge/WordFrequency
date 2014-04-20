@@ -215,14 +215,25 @@ public class FrequencyAnalyst {
 	else throw new RuntimeException("No valid data to analyze.");
 	}
 	
-	public void readAllDocuments(String dirpath) {
-		File dir = new File(dirpath);
-		File[] directoryListing = dir.listFiles();
-			
-		for (File text : directoryListing) {
-			if (text.getName().contains(".txt")) {
-				readDocument(text.getAbsolutePath());
+	public static void mergeMaps(Map<String, Integer> recipient, Map<String, Integer> merger) {
+		Set<String> mergerSet = merger.keySet();
+		
+		for (String word : mergerSet) {
+			if (recipient.containsKey(word)) {
+				int value = recipient.get(word) + merger.get(word);
+				recipient.put(word, value);
 			}
+			else {
+				recipient.put(word, merger.get(word));
+			}
+		}
+	}
+	
+	public static void mergeMaps(FrequencyAnalyst recipient, FrequencyAnalyst merger) {
+		mergeMaps(recipient.wordCatalog, merger.wordCatalog);
+		
+		if (!recipient.activeData && merger.activeData) {
+			recipient.activeData = true;
 		}
 	}
 }
