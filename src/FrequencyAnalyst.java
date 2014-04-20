@@ -14,6 +14,7 @@ import org.json.simple.JSONObject;
 public class FrequencyAnalyst {
 	private Map<String, Integer> wordCatalog = new TreeMap<String, Integer>();
 	private boolean activeData = false;
+	private String title = "";
 	
 	public FrequencyAnalyst(String filepath) {
 		readDocument(filepath);
@@ -24,6 +25,7 @@ public class FrequencyAnalyst {
 	public void clear() {
 		wordCatalog.clear();
 		activeData = false;
+		title = "";
 	}
 	
 	private String stem(String word) throws Throwable {
@@ -45,12 +47,31 @@ public class FrequencyAnalyst {
 		try {
 			Scanner scan = new Scanner(new File(filepath));
 			
+			boolean titleAscertained = false;
+			String word = "";
+			
 			while (scan.hasNext()) {
-				String word = scan.next();
 				
+				if (!titleAscertained) {
+					while (!word.contains("***")) {
+						word = scan.nextLine();
+					}
+					
+					word = word.toLowerCase();
+					word = word.replace("start of this project gutenberg ebook ", "");
+					word = word.replace("***", "");
+					word = word.trim();
+					
+					title = word;
+					titleAscertained = true;
+				}
+				
+				word = scan.next();
+								
 				word = word.toLowerCase();
 				word = word.replaceAll("[^a-zA-Z]", "");
 				word = word.trim();
+				
 				try {
 					word = stem(word);
 				}
@@ -72,6 +93,10 @@ public class FrequencyAnalyst {
 		catch (FileNotFoundException e) {
 			System.out.println("Failed to open file: " + filepath);
 		}
+	}
+	
+	public void setTitle(String title_) {
+		title = title_;
 	}
 	
 	public float mean() {
@@ -199,7 +224,8 @@ public class FrequencyAnalyst {
 				freqAn.put("total_num_words", numWords());
 				freqAn.put("standard_deviation", sd());
 				freqAn.put("mean_word_frequency", mean());
-				freqAn.put("text_name", fname.replaceAll(".json", ""));
+				freqAn.put("title", title);
+				freqAn.put("text_id", fname.replaceAll(".json", ""));
 				
 				writer.print(freqAn.toJSONString());
 				writer.close();

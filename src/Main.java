@@ -26,6 +26,7 @@ public class Main {
 		        	}
 			}
 			
+			composite.setTitle("all_texts");
 			composite.writeToFile(args[1], "allTexts.json");
 		}
 		else
