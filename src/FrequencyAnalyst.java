@@ -58,7 +58,7 @@ public class FrequencyAnalyst {
 					}
 					
 					word = word.toLowerCase();
-					word = word.replace("start of this project gutenberg ebook ", "");
+					word = word.replace("start of this project gutenberg ebook", "");
 					word = word.replace("***", "");
 					word = word.trim();
 					
