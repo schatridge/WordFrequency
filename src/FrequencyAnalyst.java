@@ -15,6 +15,8 @@ public class FrequencyAnalyst {
 	private Map<String, Integer> wordCatalog = new TreeMap<String, Integer>();
 	private boolean activeData = false;
 	private String title = "";
+	private int totalNumWords = 0; // the total number of words, before reduction
+	private int highestOccuringWordFrequency = 0;
 	
 	public FrequencyAnalyst(String filepath) {
 		readDocument(filepath);
@@ -26,6 +28,8 @@ public class FrequencyAnalyst {
 		wordCatalog.clear();
 		activeData = false;
 		title = "";
+		totalNumWords = 0;
+		highestOccuringWordFrequency = 0;
 	}
 	
 	private String stem(String word) throws Throwable {
@@ -80,12 +84,20 @@ public class FrequencyAnalyst {
 					return;
 				}
 				
-				if (wordCatalog.containsKey(word)) {
-					int value = wordCatalog.get(word) + 1;
-					wordCatalog.put(word, value);
-				}
-				else {
-					wordCatalog.put(word, 1);
+				if (!word.equals("")) {
+					if (wordCatalog.containsKey(word)) {
+						int value = wordCatalog.get(word) + 1;
+						wordCatalog.put(word, value);
+						
+						if (value > highestOccuringWordFrequency) 
+							highestOccuringWordFrequency = value;
+					}
+					else {
+						wordCatalog.put(word, 1);
+						if (highestOccuringWordFrequency == 0) 
+							++highestOccuringWordFrequency;
+					}
+					++totalNumWords;
 				}
 			}
 			activeData = true;
@@ -99,19 +111,9 @@ public class FrequencyAnalyst {
 		title = title_;
 	}
 	
-	public float mean() {
-		if (activeData) {
-			int numWords = 0;
-			float total = 0;
-			
-			Set<String> words = wordCatalog.keySet();
-			
-			for (String word : words) {
-				total += wordCatalog.get(word);
-				numWords++;
-			}
-			
-			return total / numWords;
+	public double mean() {
+		if (activeData) {			
+			return ((double) totalNumWords) / numWords();
 		}
 		else {
 			throw new RuntimeException("No valid data to analyze.");
@@ -173,7 +175,7 @@ public class FrequencyAnalyst {
 		else throw new RuntimeException("No valid data to analyze.");
 	}
 	
-	public float sd() {
+	public double sd() {
 		if (activeData) {
 			int[] frequencies = new int[wordCatalog.size()];
 			Set<String> words = wordCatalog.keySet();
@@ -183,15 +185,15 @@ public class FrequencyAnalyst {
 				counter++;
 			}
 			
-			float mean = mean();
+			double mean = mean();
 			
-			float sum = 0;
+			double sum = 0;
 			for (int i = 0; i < counter; ++i) {
 				sum += Math.pow(frequencies[i] - mean, 2);
 			}
 			double omega = Math.sqrt(sum / counter);
 			
-			return (float) omega;
+			return omega;
 		}
 		else throw new RuntimeException("No valid data to analyze.");
 	}
@@ -214,7 +216,7 @@ public class FrequencyAnalyst {
 						
 						wordVector.get(wordVector.size() -1).put("word", w);
 						wordVector.get(wordVector.size() - 1).put("frequency",  wordCatalog.get(w));
-						wordVector.get(wordVector.size() - 1).put("difficulty_level", "TBD");
+						wordVector.get(wordVector.size() - 1).put("difficulty_level", "need_data");
 						
 						wordLib.add(wordVector.get(wordVector.size() - 1));
 					}
@@ -241,6 +243,77 @@ public class FrequencyAnalyst {
 	else throw new RuntimeException("No valid data to analyze.");
 	}
 	
+	public boolean writeToFile(String directory, String fname, Map<String, Double> wd) {
+		if (activeData) {
+			try {				
+				PrintWriter writer = new PrintWriter(directory + "/" + fname);
+				Set<String> words = wordCatalog.keySet();
+				
+				JSONObject freqAn = new JSONObject();
+				
+				JSONObject word = new JSONObject();
+				JSONArray wordLib = new JSONArray();
+				ArrayList<JSONObject> wordVector = new ArrayList<JSONObject>();
+				
+				for (String w : words) {
+					if (w.trim().length() > 0) {
+						wordVector.add(new JSONObject());
+						
+						wordVector.get(wordVector.size() -1).put("word", w);
+						wordVector.get(wordVector.size() - 1).put("frequency",  wordCatalog.get(w));
+						wordVector.get(wordVector.size() - 1).put("difficulty_level", wd.get(w));
+						
+						wordLib.add(wordVector.get(wordVector.size() - 1));
+					}
+				}
+				freqAn.put("words", wordLib);
+				
+				freqAn.put("total_num_words", numWords());
+				freqAn.put("standard_deviation", sd());
+				freqAn.put("mean_word_frequency", mean());
+				freqAn.put("title", title);
+				freqAn.put("text_id", fname.replaceAll(".json", ""));
+				
+				writer.print(freqAn.toJSONString());
+				writer.close();
+				return true;
+			}
+			catch (FileNotFoundException fnfe) {
+				return false;
+			}
+			catch (SecurityException se) {
+				return false;
+			}
+		}
+	else throw new RuntimeException("No valid data to analyze.");
+	}
+	
+	public void readAllDocuments(String dirpath) {
+			File dir = new File(dirpath);
+			File[] directory = dir.listFiles();
+			if (directory != null) {
+				for (File child : directory) {
+					if (child.getName().contains(".txt")) {
+						readDocument(child.getAbsolutePath());
+					}
+				}
+			}
+	}
+	
+	public Map<String, Double> wordDifficulties() {
+		if (activeData) {
+			Map<String, Double> wd = new TreeMap<String, Double>();
+			
+			Set<String> words = wordCatalog.keySet();
+			for (String word : words) {
+				wd.put(word, wordDifficulty(word));
+			}
+			
+			return wd;
+		}
+		else throw new RuntimeException("No valid data to analyze.");
+	}
+	
 	public static void merge(FrequencyAnalyst recipient, FrequencyAnalyst merger) {
 		Set<String> mergerSet = merger.wordCatalog.keySet();
 		
@@ -248,15 +321,34 @@ public class FrequencyAnalyst {
 			if (recipient.wordCatalog.containsKey(word)) {
 				int value = recipient.frequency(word) + merger.frequency(word);
 				recipient.wordCatalog.put(word, value);
+				
+				if (value > recipient.highestOccuringWordFrequency)
+					recipient.highestOccuringWordFrequency = value;
 			}
 			else {
 				recipient.wordCatalog.put(word, merger.frequency(word));
+				
+				if (merger.frequency(word) > recipient.highestOccuringWordFrequency)
+					recipient.highestOccuringWordFrequency = merger.frequency(word);
 			}
 		}
 		
 		if (!recipient.activeData && merger.activeData) {
 			recipient.activeData = true;
 		}
+		
+		recipient.totalNumWords += merger.totalNumWords;
+	}
+
+	static int counter = 0;
+	public double wordDifficulty(String word) {	
+		double normalized = ((double) frequency(word)) * 100.0 / highestOccuringWordFrequency;
+
+		if (normalized > 0.1) {normalized = 0.1; /*System.out.println((++counter) * 100.0 / numWords());*/}
+		normalized *= 100.0 / 0.1;
+		normalized -= 2 * (normalized - 50.0);
+
+		return normalized;
 	}
 }
 
