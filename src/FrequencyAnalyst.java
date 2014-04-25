@@ -351,5 +351,3 @@ public class FrequencyAnalyst {
 		return normalized;
 	}
 }
-
-	

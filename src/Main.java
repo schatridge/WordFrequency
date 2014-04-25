@@ -4,7 +4,7 @@ import java.util.TreeMap;
 
 public class Main {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) {		
 		System.out.println("Beginning frequency analysis...\n");
 		System.out.print("Opening input directory " + args[0] + " ...");
 		String filepath = args[0];
